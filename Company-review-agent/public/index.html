@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Company Review Analyzer</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f7f9fc;
+      color: #121212;
+      padding: 2rem;
+      max-width: 800px;
+      margin: auto;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.dark {
+      background-color: #121212;
+      color: #f0f0f0;
+    }
+
+    h1, h2 {
+      color: inherit;
+    }
+
+    input, textarea, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      resize: none;
+    }
+  
+
+    button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .response {
+      margin-top: 1rem;
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 5px;
+      color: #000;
+    }
+
+    body.dark .response {
+      background: #1f1f1f;
+      border-color: #333;
+      color: #f0f0f0;
+    }
+
+    .suggestions {
+      display: none;
+      margin-top: 0.5rem;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .suggestions span {
+      display: inline-block;
+      background-color: #fff;
+      border-radius: 20px;
+      padding: 8px 16px;
+      margin: 4px 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out;
+    }
+
+    .suggestions span:hover {
+      background-color: #d0e6ff;
+    }
+
+    body.dark .suggestions span:hover {
+    background-color: #4b739f;
+}
+
+    body.dark .suggestions span {
+      background: #1f1f1f;
+      border-color: #333;
+      color: #f0f0f0;
+    }
+
+    .disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+/* Toggle Button Styles */
+/* Toggle Button Styles (Updated) */
+/* Dark mode toggle - polished and small */
+.toggle-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+}
+
+.checkbox {
+  opacity: 0;
+  position: absolute;
+}
+
+.checkbox-label {
+  background-color: #333;
+  border-radius: 50px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  height: 28px;
+  width: 40px;
+  padding: 0 6px;
+  transition: background-color 0.3s ease-in-out;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.checkbox-label .fas {
+  font-size: 14px;
+  z-index: 2;
+}
+
+.fa-moon {
+  color: #3498db;
+}
+
+.fa-sun {
+  color: #f1c40f;
+}
+
+.ball {
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  height: 24px;
+  width: 24px;
+  transform: translateX(0);
+  transition: transform 0.3s ease-in-out;
+  z-index: 1;
+}
+
+.checkbox:checked + .checkbox-label .ball {
+  transform: translateX(24px);
+}
+
+.checkbox:checked + .checkbox-label {
+  background-color: #555;
+}
+
+  </style>
+</head>
+<body>
+  <h1>🔎 Company Review & Info Analyzer</h1>
+
+  <input type="text" id="company" placeholder="Enter company name (e.g., Wipro)" />
+  <button onclick="analyzeCompany()">Analyze</button>
+
+  <h2>💬 Ask a Question</h2>
+  <textarea id="question" rows="4" class="disabled" disabled placeholder="Analyze a company first..."></textarea>
+  <div class="suggestions" id="suggestions"></div>
+  <button id="askBtn" onclick="askQuestion()" class="disabled" disabled>Ask</button>
+
+  <div class="response" id="output"></div>
+
+  <!-- Toggle Dark Mode -->
+  <div class="toggle-container">
+    <input type="checkbox" class="checkbox" id="themeToggle">
+    <label for="themeToggle" class="checkbox-label">
+      <i class="fas fa-moon"></i>
+      <i class="fas fa-sun"></i>
+      <span class="ball"></span>
+    </label>
+  </div>
+
+  <script>
+    const suggestionsList = [
+      "What are the pros and cons of working here?",
+      "How is the work-life balance?",
+      "Is the management supportive?",
+      "Are there growth opportunities?",
+      "How is the salary and benefits?",
+      "What is the interview process like?",
+      "Why do people leave this company?",
+      "Is this a good place for freshers?",
+      "How is the team culture?",
+      "What do employees complain about the most?"
+    ];
+
+    const questionEl = document.getElementById('question');
+    const askBtn = document.getElementById('askBtn');
+    const suggestionsEl = document.getElementById('suggestions');
+
+    function enableAskSection() {
+      questionEl.disabled = false;
+      askBtn.disabled = false;
+      questionEl.classList.remove('disabled');
+      askBtn.classList.remove('disabled');
+      suggestionsEl.style.display = 'block';
+    }
+
+    async function analyzeCompany() {
+      const company = document.getElementById('company').value.trim();
+      if (!company) return alert("Please enter a company name.");
+
+      document.getElementById('output').innerHTML = "⏳ Analyzing company info and reviews...";
+      askBtn.disabled = true;
+
+      try {
+        const res = await fetch(`/analyze?company=${encodeURIComponent(company)}`);
+        const html = await res.text();
+        document.getElementById('output').innerHTML = html;
+
+        enableAskSection();
+      } catch (err) {
+        document.getElementById('output').innerHTML = "❌ Failed to analyze company.";
+        console.error(err);
+      }
+    }
+
+    async function askQuestion() {
+      const company = document.getElementById('company').value.trim();
+      const question = questionEl.value.trim();
+      if (!company || !question) return alert("Please fill both fields.");
+
+      document.getElementById('output').innerHTML = "⏳ Getting answer...";
+
+      try {
+        const res = await fetch('/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ company, question })
+        });
+
+        const data = await res.json();
+        document.getElementById('output').innerHTML = `<strong>Answer:</strong> ${data.answer}`;
+      } catch (err) {
+        document.getElementById('output').innerHTML = "❌ Failed to get answer.";
+        console.error(err);
+      }
+    }
+
+    questionEl.addEventListener('focus', () => {
+      if (!questionEl.disabled && suggestionsEl.innerHTML === '') {
+        suggestionsList.forEach(q => {
+          const span = document.createElement('span');
+          span.textContent = q;
+          span.onclick = () => {
+            questionEl.value = q;
+          };
+          suggestionsEl.appendChild(span);
+        });
+      }
+    });
+
+    // Theme toggle
+    const toggle = document.getElementById('themeToggle');
+    if (localStorage.getItem('theme') === 'dark') {
+      document.body.classList.add('dark');
+      toggle.checked = true;
+    }
+
+    toggle.addEventListener('change', () => {
+      if (toggle.checked) {
+        document.body.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      } else {
+        document.body.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "company-review-njs",
+  "version": "1.0.0",
+  "description": "AI agent that analyzes company reviews",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "Madan Kumar AS",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "cheerio": "^1.0.0-rc.12",
+    "css-select": "^4.1.0",
+    "csv-writer": "^1.6.0",
+    "dotenv": "^17.0.0",
+    "express": "^5.1.0",
+    "openai": "^5.8.2",
+    "puppeteer": "^24.11.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}
